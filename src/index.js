@@ -1,6 +1,5 @@
 import express from 'express';
 import fs from 'fs';
-import path from 'path';
 import cors from 'cors';
 
 const app = express();
@@ -9,17 +8,31 @@ const PORT = 3000;
 app.use(cors());
 
 
-app.get('/cidades', (req, res) => {
-  const filePath = path.join(__dirname, 'cidades.json');
+const rawData = fs.readFileSync('src/data/states.json', 'utf8');
+const dados = JSON.parse(rawData);
 
-  try {
-    const cidadesData = fs.readFileSync(filePath, 'utf-8');
-    const cidades = JSON.parse(cidadesData);
-    res.json(cidades);
-  } catch (err) {
-    console.error('Erro ao ler o arquivo cidades.json:', err);
-    res.status(500).send('Erro ao buscar cidades');
+
+const todasCidades = dados.estados.flatMap(estado =>
+  estado.cidades.map(cidade => ({
+    cidade,
+    estado: estado.nome,
+    sigla: estado.sigla,
+  }))
+);
+
+
+app.get('/cidades', (req, res) => {
+  const query = req.query.query?.toLowerCase();
+
+  if (!query || query.length < 2) {
+    return res.json([]);
   }
+
+  const resultado = todasCidades.filter(item =>
+    item.cidade.toLowerCase().includes(query)
+  );
+
+  res.json(resultado);
 });
 
 app.listen(PORT, () => {
