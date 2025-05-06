@@ -1,12 +1,12 @@
-const express = require('express');
+const expressApp = require('express');
 const authController = require('../controllers/authController');
-const { ensureAuth } = require('../middlewares/authMiddleware');
+const { ensureAuth: authMiddlewareEnsureAuth } = require('../middlewares/authMiddleware');
 
-const router = express.Router();
+const router = new expressApp.Router();
 
 router.get('/auth/google', authController.login);
 router.get('/auth/google/callback', authController.callback);
-router.get('/profile', ensureAuth, authController.profile);
+router.get('/profile', authMiddlewareEnsureAuth, authController.profile);
 router.get('/logout', authController.logout);
 
 module.exports = router;
